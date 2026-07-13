@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Optional
 
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 
-from app.config import WATCH_DEBOUNCE_SECONDS
+from app.config import WATCH_DEBOUNCE_SECONDS, WATCH_POLL_SECONDS
 from app.notes_index import NotesIndex
 from app.ws_manager import ConnectionManager
 
@@ -56,11 +56,14 @@ class NotesWatcher:
         self._index = index
         self._manager = manager
         self._loop = loop
-        self._observer = Observer()
+        # NAS 上的 bind mount、网络盘和同步软件经常无法可靠传递 inotify
+        # 事件。PollingObserver 通过比较目录快照检测变化，兼容性更好。
+        self._observer = PollingObserver(timeout=WATCH_POLL_SECONDS)
         self._started = False
 
     def _handle_change(self) -> None:
         self._index.rebuild()
+        print("[notes] 检测到文件变化，索引已更新", flush=True)
         asyncio.run_coroutine_threadsafe(
             self._manager.broadcast({"event": "notes_changed"}), self._loop
         )
@@ -70,6 +73,10 @@ class NotesWatcher:
         self._observer.schedule(handler, str(self._root_dir), recursive=True)
         self._observer.start()
         self._started = True
+        print(
+            f"[notes] 正在轮询 {self._root_dir}，间隔 {WATCH_POLL_SECONDS:g} 秒",
+            flush=True,
+        )
 
     def stop(self) -> None:
         if self._started:

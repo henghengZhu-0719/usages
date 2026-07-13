@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Layout, Tree, Input, Spin, Typography, Empty, List, Button } from 'antd';
 import {
   BookOutlined,
@@ -59,6 +59,7 @@ function App() {
   const [note, setNote] = useState<NoteDetail | null>(null);
   const [noteLoading, setNoteLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
+  const selectedPathRef = useRef<string | null>(null);
 
   const loadTree = useCallback(async () => {
     const { tree: data } = await fetchTree();
@@ -68,27 +69,37 @@ function App() {
 
   const openNote = useCallback(async (path: string) => {
     setSelectedPath(path);
+    selectedPathRef.current = path;
     setNoteLoading(true);
     try {
       const data = await fetchNote(path);
       setNote(data);
+    } catch {
+      setSelectedPath(null);
+      selectedPathRef.current = null;
+      setNote(null);
     } finally {
       setNoteLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadTree();
-    const disconnect = connectUpdatesSocket(() => {
-      loadTree();
-      setSelectedPath((current) => {
-        if (current) openNote(current);
-        return current;
-      });
-    });
-    return disconnect;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const refresh = () => {
+      void loadTree();
+      const current = selectedPathRef.current;
+      if (current) void openNote(current);
+    };
+
+    refresh();
+    const disconnect = connectUpdatesSocket(refresh);
+    // 即使反向代理完全不支持 WebSocket，也能最终同步到最新内容。
+    const refreshTimer = window.setInterval(refresh, 10000);
+
+    return () => {
+      disconnect();
+      window.clearInterval(refreshTimer);
+    };
+  }, [loadTree, openNote]);
 
   const antdTree = useMemo(() => toAntdTree(tree), [tree]);
   const noteCount = useMemo(() => countNotes(tree), [tree]);
