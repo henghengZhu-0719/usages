@@ -2,7 +2,7 @@
 FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:22-alpine3.22 AS frontend-build
 WORKDIR /web
 COPY web/package.json web/package-lock.json* ./
-RUN npm install
+RUN npm ci
 COPY web/ ./
 RUN npm run build
 

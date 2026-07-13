@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Layout, Tree, Input, Spin, Typography, Empty, List } from 'antd';
+import { Layout, Tree, Input, Spin, Typography, Empty, List, Button } from 'antd';
+import {
+  BookOutlined,
+  FileTextOutlined,
+  FolderOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { connectUpdatesSocket, fetchNote, fetchTree, searchNotes } from './api';
 import type { NoteDetail, SearchResult, TreeNode } from './types';
@@ -11,15 +17,32 @@ function toAntdTree(nodes: TreeNode[]): DataNode[] {
   return nodes.map((node) =>
     node.type === 'dir'
       ? {
-          title: node.name,
+          title: (
+            <span className="tree-title tree-title--directory" title={node.name}>
+              {node.name}
+            </span>
+          ),
           key: `dir:${node.path}`,
+          icon: <FolderOutlined className="tree-icon tree-icon--folder" />,
           children: toAntdTree(node.children),
         }
       : {
-          title: node.title || node.name,
+          title: (
+            <span className="tree-title tree-title--file" title={node.title || node.name}>
+              {node.title || node.name}
+            </span>
+          ),
           key: `file:${node.path}`,
+          icon: <FileTextOutlined className="tree-icon tree-icon--file" />,
           isLeaf: true,
         },
+  );
+}
+
+function countNotes(nodes: TreeNode[]): number {
+  return nodes.reduce(
+    (total, node) => total + (node.type === 'file' ? 1 : countNotes(node.children)),
+    0,
   );
 }
 
@@ -68,11 +91,16 @@ function App() {
   }, []);
 
   const antdTree = useMemo(() => toAntdTree(tree), [tree]);
+  const noteCount = useMemo(() => countNotes(tree), [tree]);
 
   const handleSelect = (keys: React.Key[]) => {
     const key = keys[0];
     if (typeof key === 'string' && key.startsWith('file:')) {
       openNote(key.slice('file:'.length));
+    } else if (typeof key === 'string' && key.startsWith('dir:')) {
+      setExpandedKeys((current) =>
+        current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+      );
     }
   };
 
@@ -86,16 +114,9 @@ function App() {
   };
 
   return (
-    <Layout style={{ height: '100vh' }}>
-      <Header
-        style={{
-          background: '#fff',
-          borderBottom: '1px solid #f0f0f0',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <Typography.Title level={4} style={{ margin: 0, marginRight: 24 }}>
+    <Layout className="app-shell">
+      <Header className="app-header">
+        <Typography.Title level={4} className="app-title">
           笔记浏览器
         </Typography.Title>
         <Input.Search
@@ -108,22 +129,44 @@ function App() {
           }}
         />
       </Header>
-      <Layout>
-        <Sider width={300} style={{ background: '#fff', overflow: 'auto', padding: 12 }}>
+      <Layout className="app-main">
+        <Sider width={320} theme="light" className="notes-sider">
+          <div className="tree-toolbar">
+            <div className="tree-toolbar__title">
+              <span className="tree-toolbar__icon"><BookOutlined /></span>
+              <div>
+                <Typography.Text strong>文档库</Typography.Text>
+                <Typography.Text type="secondary" className="tree-toolbar__count">
+                  {noteCount} 篇文档
+                </Typography.Text>
+              </div>
+            </div>
+            {!searchResults && expandedKeys.length > 0 && (
+              <Button type="text" size="small" onClick={() => setExpandedKeys([])}>
+                全部折叠
+              </Button>
+            )}
+          </div>
+          <div className="tree-content">
           {searchResults ? (
             <List
               size="small"
+              className="search-results"
               dataSource={searchResults}
               locale={{ emptyText: '没有找到匹配的笔记' }}
               renderItem={(item) => (
                 <List.Item
-                  style={{ cursor: 'pointer' }}
+                  className="search-result"
                   onClick={() => {
                     setSearchResults(null);
                     openNote(item.path);
                   }}
                 >
-                  <List.Item.Meta title={item.title} description={item.snippet} />
+                  <SearchOutlined className="search-result__icon" />
+                  <List.Item.Meta
+                    title={<span title={item.title}>{item.title}</span>}
+                    description={item.snippet}
+                  />
                 </List.Item>
               )}
             />
@@ -131,15 +174,19 @@ function App() {
             <Empty description="没有找到 Markdown 笔记" />
           ) : (
             <Tree
+              className="note-tree"
               treeData={antdTree}
+              showIcon
+              blockNode
               expandedKeys={expandedKeys}
               onExpand={(keys) => setExpandedKeys(keys as string[])}
               selectedKeys={selectedPath ? [`file:${selectedPath}`] : []}
               onSelect={handleSelect}
             />
           )}
+          </div>
         </Sider>
-        <Content style={{ padding: 24, overflow: 'auto', background: '#fff' }}>
+        <Content className="note-content">
           {noteLoading ? (
             <Spin />
           ) : note ? (
