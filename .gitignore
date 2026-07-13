@@ -1,0 +1,21 @@
+/sample-notes
+
+# Local configuration
+.claude/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Frontend
+web/node_modules/
+web/dist/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/

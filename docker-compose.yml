@@ -1,0 +1,13 @@
+services:
+  notes-viewer:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # 把 NAS 上笔记文件夹换成你自己的实际路径，只读挂载避免误写
+      - /vol1/1000/zhuyq/派乐多:/notes:ro
+    environment:
+      # 留空则不启用鉴权；建议远程访问时设置这两个变量
+      AUTH_USER: ""
+      AUTH_PASS: ""
+    restart: unless-stopped

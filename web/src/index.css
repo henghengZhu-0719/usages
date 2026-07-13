@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light;
+  font: 14px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.markdown-body {
+  max-width: 860px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  font-weight: 600;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  border: 1px solid #e5e5e5;
+  padding: 6px 12px;
+}
+
+.markdown-body img {
+  max-width: 100%;
+}
+
+.markdown-body pre {
+  padding: 12px 16px;
+  overflow: auto;
+  border-radius: 6px;
+}
