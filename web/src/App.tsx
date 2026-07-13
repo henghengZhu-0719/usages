@@ -60,11 +60,16 @@ function App() {
   const [noteLoading, setNoteLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const selectedPathRef = useRef<string | null>(null);
+  const revisionRef = useRef<number | null>(null);
+  const searchQueryRef = useRef('');
 
   const loadTree = useCallback(async () => {
-    const { tree: data } = await fetchTree();
+    const { tree: data, revision } = await fetchTree();
     setTree(data);
     setExpandedKeys((prev) => (prev.length ? prev : collectExpandedKeys(data)));
+    const changed = revisionRef.current !== revision;
+    revisionRef.current = revision;
+    return changed;
   }, []);
 
   const openNote = useCallback(async (path: string) => {
@@ -84,16 +89,26 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const refresh = () => {
-      void loadTree();
-      const current = selectedPathRef.current;
-      if (current) void openNote(current);
+    const refresh = async (serverRevision?: number) => {
+      if (serverRevision !== undefined && serverRevision === revisionRef.current) return;
+      try {
+        const changed = await loadTree();
+        const current = selectedPathRef.current;
+        if (changed && current) await openNote(current);
+        if (changed && searchQueryRef.current) {
+          const { results } = await searchNotes(searchQueryRef.current);
+          setSearchResults(results);
+        }
+      } catch {
+        // WebSocket 重连和定时对齐会继续尝试。
+      }
     };
 
-    refresh();
-    const disconnect = connectUpdatesSocket(refresh);
+    void refresh();
+    // connected 消息携带当前 revision，可补齐 WebSocket 断线期间的更新。
+    const disconnect = connectUpdatesSocket((message) => void refresh(message.revision));
     // 即使反向代理完全不支持 WebSocket，也能最终同步到最新内容。
-    const refreshTimer = window.setInterval(refresh, 10000);
+    const refreshTimer = window.setInterval(() => void refresh(), 10000);
 
     return () => {
       disconnect();
@@ -116,11 +131,13 @@ function App() {
   };
 
   const handleSearch = async (value: string) => {
-    if (!value.trim()) {
+    const query = value.trim();
+    searchQueryRef.current = query;
+    if (!query) {
       setSearchResults(null);
       return;
     }
-    const { results } = await searchNotes(value);
+    const { results } = await searchNotes(query);
     setSearchResults(results);
   };
 
@@ -169,6 +186,7 @@ function App() {
                 <List.Item
                   className="search-result"
                   onClick={() => {
+                    searchQueryRef.current = '';
                     setSearchResults(null);
                     openNote(item.path);
                   }}

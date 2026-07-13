@@ -27,3 +27,18 @@ export interface SearchResult {
   title: string;
   snippet: string;
 }
+
+export interface TreeResponse {
+  tree: TreeNode[];
+  revision: number;
+}
+
+export interface UpdateMessage {
+  event: 'connected' | 'notes_changed';
+  revision: number;
+  changes?: {
+    added: string[];
+    modified: string[];
+    deleted: string[];
+  };
+}

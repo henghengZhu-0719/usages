@@ -44,7 +44,8 @@ app.add_middleware(
 
 @app.get("/api/notes")
 async def api_get_tree(_: bool = Depends(require_auth)):
-    return {"tree": index.get_tree()}
+    tree, revision = index.get_tree_snapshot()
+    return {"tree": tree, "revision": revision}
 
 
 @app.get("/api/notes/{note_path:path}")
@@ -64,9 +65,12 @@ async def api_search(q: str = "", _: bool = Depends(require_auth)):
 async def ws_updates(websocket: WebSocket):
     await manager.connect(websocket)
     try:
+        await websocket.send_json({"event": "connected", "revision": index.revision})
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         await manager.disconnect(websocket)
 
 

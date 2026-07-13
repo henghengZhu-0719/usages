@@ -61,5 +61,13 @@
 4. 加入全文搜索（`Input.Search`）、Basic Auth 鉴权。
 5. 编写多阶段 `Dockerfile` / `docker-compose.yml`，在 NAS Docker 上部署验证挂载、端口映射与远程访问。
 6. 补充前端样式、图片/附件展示等能力。
+
+## 7. 文件更新检测
+
+后端默认每 2 秒轮询一次笔记目录，适用于 NAS bind mount 和网络盘。文件事件会在 0.5 秒内合并，持续写入时最迟 2 秒强制处理一批。可通过环境变量调整：
+
+- `WATCH_POLL_SECONDS`：目录轮询间隔，默认 `2`。
+- `WATCH_DEBOUNCE_SECONDS`：单批事件的合并等待时间，默认 `0.5`。
+- `WATCH_MAX_WAIT_SECONDS`：连续文件事件的最大等待时间，默认 `2`。
 # usages
 # usages
