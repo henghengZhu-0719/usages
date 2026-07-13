@@ -1,5 +1,5 @@
 # ---- 阶段一：构建前端 (React + antd) ----
-FROM node:20-alpine AS frontend-build
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:22-alpine3.22 AS frontend-build
 WORKDIR /web
 COPY web/package.json web/package-lock.json* ./
 RUN npm install
@@ -7,7 +7,7 @@ COPY web/ ./
 RUN npm run build
 
 # ---- 阶段二：运行后端 (FastAPI) ----
-FROM python:3.12-slim AS backend
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.12-slim-bookworm AS backend
 WORKDIR /srv
 
 COPY requirements.txt ./
