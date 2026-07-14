@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.auth import require_auth
 from app.config import NOTES_DIR
@@ -58,6 +59,19 @@ async def api_get_note(note_path: str, _: bool = Depends(require_auth)):
 @app.get("/api/search")
 async def api_search(q: str = "", _: bool = Depends(require_auth)):
     return {"results": index.search(q)}
+
+
+@app.get("/api/files/{file_path:path}")
+async def api_get_file(file_path: str, _: bool = Depends(require_auth)):
+    """给笔记正文里引用的图片/附件提供原文件访问，路径限定在笔记根目录内。"""
+    target = (root_dir / file_path).resolve()
+    try:
+        target.relative_to(root_dir.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="文件不存在")
+    if not target.is_file() or target.suffix.lower() == ".md":
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(target)
 
 
 @app.websocket("/ws/updates")

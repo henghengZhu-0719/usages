@@ -1,3 +1,4 @@
+import posixpath
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -241,7 +242,7 @@ class NotesIndex:
         return {
             "path": rel_path,
             "title": title,
-            "html": render_markdown(raw),
+            "html": render_markdown(raw, posixpath.dirname(rel_path)),
             "mtime": mtime,
         }
 
