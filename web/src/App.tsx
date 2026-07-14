@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Empty, Input, Spin } from 'antd';
+import { Empty, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
   FileTextOutlined,
   FolderOpenOutlined,
   FolderOutlined,
   HomeOutlined,
-  SearchOutlined,
 } from '@ant-design/icons';
-import { connectUpdatesSocket, fetchNote, fetchTree, searchNotes } from './api';
-import type { FileNode, NoteDetail, SearchResult, TreeNode } from './types';
+import { connectUpdatesSocket, fetchNote, fetchTree } from './api';
+import type { FileNode, NoteDetail, TreeNode } from './types';
 import './App.css';
 
 interface FolderItem {
@@ -52,11 +51,9 @@ function App() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [note, setNote] = useState<NoteDetail | null>(null);
   const [noteLoading, setNoteLoading] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
   const selectedPathRef = useRef<string | null>(null);
   const revisionRef = useRef<number | null>(null);
-  const searchQueryRef = useRef('');
+  const noteListRef = useRef<HTMLDivElement | null>(null);
 
   const loadTree = useCallback(async () => {
     const { tree: data, revision } = await fetchTree();
@@ -88,10 +85,6 @@ function App() {
         const changed = await loadTree();
         const current = selectedPathRef.current;
         if (changed && current) await openNote(current);
-        if (changed && searchQueryRef.current) {
-          const { results } = await searchNotes(searchQueryRef.current);
-          setSearchResults(results);
-        }
       } catch {
         // WebSocket 重连和定时对齐会继续尝试。
       }
@@ -111,6 +104,31 @@ function App() {
     [tree],
   );
   const folders = useMemo(() => collectFolders(tree), [tree]);
+  const topLevelFolders = useMemo(
+    () => folders.filter((folder) => folder.depth === 0),
+    [folders],
+  );
+  const folderTrail = useMemo(
+    () =>
+      folders
+        .filter(
+          (folder) =>
+            selectedFolder === folder.path || selectedFolder.startsWith(`${folder.path}/`),
+        )
+        .sort((a, b) => a.depth - b.depth),
+    [folders, selectedFolder],
+  );
+  const folderLevels = useMemo(() => {
+    const levels: FolderItem[][] = [topLevelFolders];
+    folderTrail.forEach((parent) => {
+      const children = folders.filter(
+        (folder) =>
+          folder.depth === parent.depth + 1 && folder.path.startsWith(`${parent.path}/`),
+      );
+      if (children.length) levels.push(children);
+    });
+    return levels;
+  }, [folderTrail, folders, topLevelFolders]);
   const visibleNotes = useMemo(
     () =>
       selectedFolder
@@ -129,44 +147,20 @@ function App() {
     }
   }, [folders, selectedFolder]);
 
-  const handleSearch = async (value: string) => {
-    const query = value.trim();
-    setSearchText(value);
-    searchQueryRef.current = query;
-    if (!query) {
-      setSearchResults(null);
-      return;
-    }
-    const { results } = await searchNotes(query);
-    setSearchResults(results);
-  };
-
-  const clearSearchAndOpen = (path: string) => {
-    setSearchText('');
-    searchQueryRef.current = '';
-    setSearchResults(null);
-    void openNote(path);
+  const selectFolder = (path: string) => {
+    setSelectedFolder(path);
+    window.requestAnimationFrame(() => {
+      noteListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   return (
-    <main className={`app-shell${note ? ' app-shell--reading' : ''}`}>
+    <main className={`app-shell${selectedPath ? ' app-shell--reading' : ''}`}>
       <header className="app-header">
         <div className="brand">
           <span className="brand__mark"><FileTextOutlined /></span>
           <span className="brand__name">我的笔记</span>
         </div>
-        <Input
-          className="global-search"
-          prefix={<SearchOutlined />}
-          placeholder="搜索你的笔记"
-          value={searchText}
-          allowClear
-          onChange={(event) => {
-            setSearchText(event.target.value);
-            if (!event.target.value) void handleSearch('');
-          }}
-          onPressEnter={(event) => void handleSearch(event.currentTarget.value)}
-        />
         <div className="header-count">共 {allNotes.length} 篇</div>
       </header>
 
@@ -175,67 +169,76 @@ function App() {
           <nav className="folder-panel" aria-label="文件夹">
             <div className="panel-heading">
               <span>文件夹</span>
-              <span className="panel-heading__count">{folders.length}</span>
+              <span className="panel-heading__count">{topLevelFolders.length}</span>
             </div>
-            <div className="folder-list">
-              <button
-                className={`folder-item${selectedFolder === '' ? ' is-active' : ''}`}
-                onClick={() => setSelectedFolder('')}
-              >
-                <HomeOutlined />
-                <span className="folder-item__name">全部笔记</span>
-                <span className="folder-item__count">{allNotes.length}</span>
-              </button>
-              {folders.map((folder) => (
-                <button
-                  key={folder.path}
-                  className={`folder-item${selectedFolder === folder.path ? ' is-active' : ''}`}
-                  style={{ '--folder-depth': folder.depth } as React.CSSProperties}
-                  onClick={() => setSelectedFolder(folder.path)}
-                  title={folder.path}
-                >
-                  {selectedFolder === folder.path ? <FolderOpenOutlined /> : <FolderOutlined />}
-                  <span className="folder-item__name">{folder.name}</span>
-                  <span className="folder-item__count">{folder.count}</span>
-                </button>
-              ))}
+            <div className="folder-levels">
+              {folderLevels.map((level, levelIndex) => {
+                const parent = levelIndex > 0 ? folderTrail[levelIndex - 1] : null;
+                return (
+                  <div className="folder-level" key={parent?.path || 'root'}>
+                    {parent && (
+                      <div className="folder-level__title">
+                        <span>{parent.name}</span>
+                        <small>子文件夹</small>
+                      </div>
+                    )}
+                    <div className="folder-list">
+                      {levelIndex === 0 ? (
+                        <button
+                          className={`folder-item${selectedFolder === '' ? ' is-active' : ''}`}
+                          onClick={() => selectFolder('')}
+                        >
+                          <HomeOutlined />
+                          <span className="folder-item__name">全部笔记</span>
+                          <span className="folder-item__count">{allNotes.length}</span>
+                        </button>
+                      ) : parent ? (
+                        <button
+                          className={`folder-item folder-item--all${selectedFolder === parent.path ? ' is-active' : ''}`}
+                          onClick={() => selectFolder(parent.path)}
+                        >
+                          <FolderOpenOutlined />
+                          <span className="folder-item__name">全部</span>
+                          <span className="folder-item__count">{parent.count}</span>
+                        </button>
+                      ) : null}
+                      {level.map((folder) => {
+                        const isCurrentBranch =
+                          selectedFolder === folder.path ||
+                          selectedFolder.startsWith(`${folder.path}/`);
+                        return (
+                          <button
+                            key={folder.path}
+                            className={`folder-item${isCurrentBranch ? ' is-active' : ''}`}
+                            onClick={() => selectFolder(folder.path)}
+                            title={folder.path}
+                          >
+                            {isCurrentBranch ? <FolderOpenOutlined /> : <FolderOutlined />}
+                            <span className="folder-item__name">{folder.name}</span>
+                            <span className="folder-item__count">{folder.count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </nav>
 
           <section className="notes-panel" aria-label="笔记列表">
             <div className="notes-panel__header">
               <div>
-                <span className="eyebrow">{searchResults ? '搜索结果' : '当前文件夹'}</span>
-                <h1>{searchResults ? `“${searchQueryRef.current}”` : currentFolderName}</h1>
+                <span className="eyebrow">当前文件夹</span>
+                <h1>{currentFolderName}</h1>
               </div>
               <span className="notes-total">
-                {searchResults ? searchResults.length : visibleNotes.length} 篇
+                {visibleNotes.length} 篇
               </span>
             </div>
 
-            <div className="note-list">
-              {searchResults ? (
-                searchResults.length ? (
-                  searchResults.map((item, index) => (
-                    <button
-                      key={item.path}
-                      className={`note-card${selectedPath === item.path ? ' is-active' : ''}`}
-                      onClick={() => clearSearchAndOpen(item.path)}
-                    >
-                      <span className={`note-card__cover cover-${index % 5}`}>
-                        <SearchOutlined />
-                      </span>
-                      <span className="note-card__body">
-                        <strong>{item.title}</strong>
-                        <span className="note-card__snippet">{item.snippet}</span>
-                        <small>{getParentPath(item.path)}</small>
-                      </span>
-                    </button>
-                  ))
-                ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有找到匹配的笔记" />
-                )
-              ) : visibleNotes.length ? (
+            <div className="note-list" ref={noteListRef}>
+              {visibleNotes.length ? (
                 visibleNotes.map((item, index) => (
                   <button
                     key={item.path}

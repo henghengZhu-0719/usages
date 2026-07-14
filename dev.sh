@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # 本地开发：同时启动后端 FastAPI (8000) 和前端 Vite dev server (5173)
-# 用法: ./dev.sh            # 用 sample-notes 作为笔记目录
+# 用法: ./dev.sh            # 用项目下的 notes 作为笔记目录
 #       NOTES_DIR=/your/notes ./dev.sh   # 指定自己的笔记目录
 set -euo pipefail
 cd "$(dirname "$0")"
 
-export NOTES_DIR="${NOTES_DIR:-$(pwd)/sample-notes}"
+export NOTES_DIR="${NOTES_DIR:-$(pwd)/notes}"
 echo "NOTES_DIR=$NOTES_DIR"
 
 if [ ! -d .venv ]; then
@@ -18,10 +18,10 @@ if [ ! -d web/node_modules ]; then
   (cd web && npm install)
 fi
 
-uvicorn app.main:app --reload --port 8000 &
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
-(cd web && npm run dev) &
+(cd web && npm run dev -- --host 0.0.0.0) &
 FRONTEND_PID=$!
 
 cleanup() {
@@ -32,4 +32,5 @@ trap cleanup EXIT INT TERM
 
 echo "后端: http://localhost:8000"
 echo "前端: http://localhost:5173"
+echo "局域网访问: http://<本机局域网IP>:5173"
 wait
