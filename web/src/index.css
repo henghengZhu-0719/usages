@@ -9,14 +9,23 @@ body,
 #root {
   height: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 
 .markdown-body {
+  width: 100%;
+  min-width: 0;
   max-width: 860px;
   margin: 0 auto;
   color: #292929;
   font-size: 16px;
   line-height: 1.8;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.markdown-body > * {
+  max-width: 100%;
 }
 
 .markdown-body h1,
@@ -29,7 +38,10 @@ body,
 
 .markdown-body h1 { margin-top: 0; font-size: 34px; }
 .markdown-body h2 { margin-top: 2em; }
-.markdown-body a { color: #e92d48; }
+.markdown-body a {
+  color: #e92d48;
+  overflow-wrap: anywhere;
+}
 .markdown-body blockquote {
   margin-left: 0;
   padding: 2px 18px;
@@ -39,21 +51,67 @@ body,
 }
 
 .markdown-body table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-collapse: collapse;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-body table th,
 .markdown-body table td {
   border: 1px solid #e5e5e5;
   padding: 6px 12px;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
-.markdown-body img {
+.markdown-body img,
+.markdown-body video,
+.markdown-body canvas,
+.markdown-body svg {
+  width: auto;
   max-width: 100%;
+  height: auto;
+}
+
+.markdown-body iframe {
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
+
+.markdown-body figure {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.markdown-body code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .markdown-body pre {
+  width: 100%;
+  max-width: 100%;
   padding: 16px 18px;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-radius: 12px;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown-body pre code {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.markdown-body .codehilite,
+.markdown-body details {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }

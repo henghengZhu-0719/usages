@@ -334,7 +334,8 @@ button {
 .note-detail {
   flex: 1;
   min-width: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   background: #fff;
@@ -396,6 +397,8 @@ button {
 }
 
 .note-detail .markdown-body {
+  width: 100%;
+  min-width: 0;
   max-width: 840px;
   padding: 42px 48px 80px;
 }
