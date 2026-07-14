@@ -20,7 +20,7 @@
 
 ## 4. 部署方式（已确定）
 
-- 整个服务打包成一个 **Docker 镜像**，直接部署在 **NAS 自带的 Docker（如群晖 Container Manager）** 中。
+- 服务拆分成 **前端 / 后端两个 Docker 镜像**（`docker-compose.yml` 编排），直接部署在 **NAS 自带的 Docker（如群晖 Container Manager）** 中。前端镜像基于 Nginx，托管构建产物并反向代理 `/api`、`/ws` 到后端容器；后端镜像仅运行 FastAPI。
 - 笔记根目录通过 **volume 挂载**方式，把 NAS 上的笔记文件夹挂载到容器内的固定路径（如 `/notes`，只读挂载即可，避免误写）。服务不需要 SMB/WebDAV/NAS API，直接读容器内的本地路径。
 - 服务监听容器内某个端口（如 `3000`），通过 Docker **端口映射**暴露到 NAS 的局域网 IP 上，浏览器访问 `http://<NAS_IP>:<映射端口>` 即可使用。
 
@@ -46,12 +46,12 @@
 - **实时监听**：`watchdog` 监听 `/notes`，变化后更新内存索引，通过 FastAPI 的 WebSocket 广播给已连接的前端。
 - **搜索**：启动时全量读取正文做内存索引（如用 `whoosh` 轻量全文索引，或简单的关键字匹配起步）；文件变化时增量更新索引。
 - **访问保护**：FastAPI 加一个简单的账号密码校验中间件（如 HTTP Basic Auth），或依赖 NAS 反向代理层做鉴权，避免公网直接可见笔记内容。
-- **Docker 化**（多阶段构建）：
-  - 阶段一：基于 `node` 镜像，构建 React + antd 前端（`npm run build` 产出静态文件）；
-  - 阶段二：基于 `python:3.x-slim`，安装后端依赖（`fastapi`、`uvicorn`、`watchdog`、`markdown`/`markdown2`），拷贝后端代码，并把阶段一产出的静态文件拷入，由 FastAPI 通过 `StaticFiles` 直接托管，做到单容器、单端口即可访问前后端；
-  - `docker-compose.yml`（或群晖 Container Manager 的项目配置）声明：
-    - `volumes`: 宿主机笔记目录 → 容器内 `/notes:ro`；
-    - `ports`: 宿主机某端口 → 容器内 `uvicorn` 服务端口（如 `8000`）。
+- **Docker 化**（前后端两个镜像）：
+  - `Dockerfile`（根目录）：基于 `python:3.x-slim`，安装后端依赖（`fastapi`、`uvicorn`、`watchdog`、`markdown`/`markdown2`）并拷贝 `app/`，只运行 `uvicorn`，监听 `8000`；
+  - `web/Dockerfile`：多阶段构建，阶段一基于 `node` 镜像执行 `npm run build`，阶段二把产物拷入 `nginx` 镜像，由 `web/nginx.conf` 托管静态文件，并将 `/api/*`、`/ws/*` 反向代理到后端容器（`backend:8000`）；
+  - `docker-compose.yml` 声明 `backend` + `frontend` 两个服务：
+    - `backend`：`volumes` 把宿主机笔记目录 → 容器内 `/notes:ro`；
+    - `frontend`：`ports` 把宿主机端口（如 `8000`）→ 容器内 Nginx `80` 端口，`depends_on: backend`。
 
 ## 6. 后续步骤
 

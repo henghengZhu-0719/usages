@@ -4,10 +4,9 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from app.auth import require_auth
-from app.config import NOTES_DIR, STATIC_DIR
+from app.config import NOTES_DIR
 from app.notes_index import NotesIndex
 from app.watcher import NotesWatcher
 from app.ws_manager import ConnectionManager
@@ -72,8 +71,3 @@ async def ws_updates(websocket: WebSocket):
         pass
     finally:
         await manager.disconnect(websocket)
-
-
-static_dir = Path(STATIC_DIR)
-if static_dir.is_dir():
-    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
