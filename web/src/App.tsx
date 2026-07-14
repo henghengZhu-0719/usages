@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Empty, Spin } from 'antd';
+import { Dropdown, Empty, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
+  CheckOutlined,
+  DownOutlined,
   FileTextOutlined,
   FolderOpenOutlined,
   FolderOutlined,
   HomeOutlined,
 } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import { connectUpdatesSocket, fetchNote, fetchTree } from './api';
 import type { FileNode, NoteDetail, TreeNode } from './types';
 import './App.css';
@@ -154,54 +157,70 @@ function App() {
     });
   };
 
+  const selectedTopLevel = folderTrail[0]?.path || '';
+  const topFolderMenu: MenuProps = {
+    selectedKeys: [selectedTopLevel || '__all__'],
+    onClick: ({ key }) => selectFolder(key === '__all__' ? '' : key),
+    items: [
+      {
+        key: '__all__',
+        label: (
+          <span className="folder-menu-item">
+            <span><HomeOutlined /> 全部笔记</span>
+            <small>{allNotes.length}</small>
+          </span>
+        ),
+        icon: selectedTopLevel === '' ? <CheckOutlined /> : undefined,
+      },
+      { type: 'divider' },
+      ...topLevelFolders.map((folder) => ({
+        key: folder.path,
+        label: (
+          <span className="folder-menu-item">
+            <span><FolderOutlined /> {folder.name}</span>
+            <small>{folder.count}</small>
+          </span>
+        ),
+        icon: selectedTopLevel === folder.path ? <CheckOutlined /> : undefined,
+      })),
+    ],
+  };
+
   return (
     <main className={`app-shell${selectedPath ? ' app-shell--reading' : ''}`}>
       <header className="app-header">
-        <div className="brand">
-          <span className="brand__mark"><FileTextOutlined /></span>
-          <span className="brand__name">我的笔记</span>
-        </div>
-        <div className="header-count">共 {allNotes.length} 篇</div>
+        <Dropdown menu={topFolderMenu} trigger={['click']} placement="bottomLeft">
+          <button className="brand" type="button" aria-label="选择笔记文件夹">
+            <span className="brand__mark"><FileTextOutlined /></span>
+            <span className="brand__name">{selectedFolder ? currentFolderName : '我的笔记'}</span>
+            <DownOutlined className="brand__arrow" />
+          </button>
+        </Dropdown>
+        <div className="header-count">共 {visibleNotes.length} 篇</div>
       </header>
 
       <div className="workspace">
         <section className="library-panel" aria-label="笔记库">
-          <nav className="folder-panel" aria-label="文件夹">
-            <div className="panel-heading">
-              <span>文件夹</span>
-              <span className="panel-heading__count">{topLevelFolders.length}</span>
-            </div>
+          {folderLevels.length > 1 && (
+          <nav className="folder-panel" aria-label="子文件夹">
             <div className="folder-levels">
-              {folderLevels.map((level, levelIndex) => {
-                const parent = levelIndex > 0 ? folderTrail[levelIndex - 1] : null;
+              {folderLevels.slice(1).map((level, levelIndex) => {
+                const parent = folderTrail[levelIndex];
                 return (
-                  <div className="folder-level" key={parent?.path || 'root'}>
-                    {parent && (
-                      <div className="folder-level__title">
-                        <span>{parent.name}</span>
-                        <small>子文件夹</small>
-                      </div>
-                    )}
+                  <div className="folder-level" key={parent.path}>
+                    <div className="folder-level__title">
+                      <span>{parent.name}</span>
+                      <small>子文件夹</small>
+                    </div>
                     <div className="folder-list">
-                      {levelIndex === 0 ? (
-                        <button
-                          className={`folder-item${selectedFolder === '' ? ' is-active' : ''}`}
-                          onClick={() => selectFolder('')}
-                        >
-                          <HomeOutlined />
-                          <span className="folder-item__name">全部笔记</span>
-                          <span className="folder-item__count">{allNotes.length}</span>
-                        </button>
-                      ) : parent ? (
-                        <button
-                          className={`folder-item folder-item--all${selectedFolder === parent.path ? ' is-active' : ''}`}
-                          onClick={() => selectFolder(parent.path)}
-                        >
-                          <FolderOpenOutlined />
-                          <span className="folder-item__name">全部</span>
-                          <span className="folder-item__count">{parent.count}</span>
-                        </button>
-                      ) : null}
+                      <button
+                        className={`folder-item folder-item--all${selectedFolder === parent.path ? ' is-active' : ''}`}
+                        onClick={() => selectFolder(parent.path)}
+                      >
+                        <FolderOpenOutlined />
+                        <span className="folder-item__name">全部</span>
+                        <span className="folder-item__count">{parent.count}</span>
+                      </button>
                       {level.map((folder) => {
                         const isCurrentBranch =
                           selectedFolder === folder.path ||
@@ -225,18 +244,9 @@ function App() {
               })}
             </div>
           </nav>
+          )}
 
           <section className="notes-panel" aria-label="笔记列表">
-            <div className="notes-panel__header">
-              <div>
-                <span className="eyebrow">当前文件夹</span>
-                <h1>{currentFolderName}</h1>
-              </div>
-              <span className="notes-total">
-                {visibleNotes.length} 篇
-              </span>
-            </div>
-
             <div className="note-list" ref={noteListRef}>
               {visibleNotes.length ? (
                 visibleNotes.map((item, index) => (

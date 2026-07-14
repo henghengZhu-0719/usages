@@ -39,8 +39,44 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: fit-content;
+  padding: 0;
+  color: inherit;
   font-size: 17px;
   font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.brand__arrow {
+  margin-left: 2px;
+  color: #999;
+  font-size: 10px;
+  transition: transform 160ms ease;
+}
+
+.brand:hover .brand__arrow {
+  color: var(--accent);
+}
+
+.folder-menu-item {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 190px;
+}
+
+.folder-menu-item > span {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.folder-menu-item small {
+  color: #aaa;
 }
 
 .brand__mark {
@@ -82,7 +118,7 @@ button {
   flex: 0 0 220px;
   flex-direction: column;
   min-width: 0;
-  padding: 22px 12px 18px;
+  padding: 14px 12px 18px;
   background: #fafafa;
   border-right: 1px solid var(--line);
 }
@@ -188,39 +224,6 @@ button {
   flex-direction: column;
   min-width: 0;
   background: #fff;
-}
-
-.notes-panel__header {
-  display: flex;
-  flex: none;
-  align-items: flex-end;
-  justify-content: space-between;
-  min-height: 92px;
-  padding: 20px 22px 16px;
-  border-bottom: 1px solid #f2f2f2;
-}
-
-.eyebrow {
-  display: block;
-  margin-bottom: 3px;
-  color: #aaa;
-  font-size: 11px;
-}
-
-.notes-panel__header h1 {
-  max-width: 245px;
-  margin: 0;
-  overflow: hidden;
-  font-size: 20px;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.notes-total {
-  flex: none;
-  color: #aaa;
-  font-size: 12px;
 }
 
 .note-list {
@@ -534,27 +537,6 @@ button {
     min-height: 0;
   }
 
-  .notes-panel__header {
-    align-items: center;
-    min-height: 72px;
-    padding: 12px 16px;
-  }
-
-  .eyebrow {
-    display: none;
-  }
-
-  .notes-panel__header h1 {
-    max-width: 70vw;
-    font-size: 21px;
-  }
-
-  .notes-total {
-    padding: 4px 8px;
-    background: #f5f5f5;
-    border-radius: 10px;
-  }
-
   .note-list {
     gap: 0;
     padding: 0 12px max(24px, env(safe-area-inset-bottom));
@@ -631,11 +613,6 @@ button {
 @media (max-width: 480px) {
   .folder-item__name {
     max-width: 112px;
-  }
-
-  .notes-panel__header h1 {
-    max-width: 68vw;
-    font-size: 19px;
   }
 
   .note-card__body strong {
