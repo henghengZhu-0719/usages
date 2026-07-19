@@ -6,9 +6,11 @@ import {
   FolderFilled,
   HomeOutlined,
   RightOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { connectUpdatesSocket, fetchNote, fetchTree } from './api';
 import type { DirNode, FileNode, NoteDetail, TreeNode } from './types';
+import Chat from './Chat';
 import './App.css';
 
 function countFiles(nodes: TreeNode[]): number {
@@ -46,6 +48,7 @@ function App() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [note, setNote] = useState<NoteDetail | null>(null);
   const [noteLoading, setNoteLoading] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const selectedPathRef = useRef<string | null>(null);
   const revisionRef = useRef<number | null>(null);
 
@@ -129,7 +132,15 @@ function App() {
           <span className="brand__mark"><FileTextOutlined /></span>
           <span className="brand__name">我的笔记</span>
         </div>
-        <div className="header-count">共 {noteCount} 篇</div>
+        <div className="header-right">
+          <span className="header-count">共 {noteCount} 篇</span>
+          <button
+            className={`chat-toggle${chatOpen ? ' is-active' : ''}`}
+            onClick={() => setChatOpen((v) => !v)}
+          >
+            <RobotOutlined /> AI 助手
+          </button>
+        </div>
       </header>
 
       <div className="workspace">
@@ -213,6 +224,8 @@ function App() {
             </>
           ) : null}
         </section>
+
+        <Chat open={chatOpen} onClose={() => setChatOpen(false)} />
       </div>
     </main>
   );

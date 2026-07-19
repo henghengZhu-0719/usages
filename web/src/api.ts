@@ -1,4 +1,4 @@
-import type { NoteDetail, SearchResult, TreeResponse, UpdateMessage } from './types';
+import type { ChatMessage, NoteDetail, SearchResult, TreeResponse, UpdateMessage } from './types';
 
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -18,6 +18,30 @@ export function fetchNote(path: string): Promise<NoteDetail> {
 
 export function searchNotes(query: string): Promise<{ results: SearchResult[] }> {
   return getJson(`/api/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function streamChat(
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+    signal,
+  });
+  if (!res.ok || !res.body) {
+    throw new Error(`请求失败: ${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const text = decoder.decode(value, { stream: true });
+    if (text) onDelta(text);
+  }
 }
 
 export function connectUpdatesSocket(onChange: (message: UpdateMessage) => void): () => void {

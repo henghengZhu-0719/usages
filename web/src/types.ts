@@ -33,6 +33,11 @@ export interface TreeResponse {
   revision: number;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface UpdateMessage {
   event: 'connected' | 'notes_changed';
   revision: number;
