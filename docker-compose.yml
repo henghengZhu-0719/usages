@@ -10,6 +10,8 @@ services:
       # 留空则不启用鉴权；建议远程访问时设置这两个变量
       AUTH_USER: ""
       AUTH_PASS: ""
+      # AI 对话的密钥，值从同目录 .env 文件读取（.env 不提交 git）
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
     restart: unless-stopped
 
   frontend:
