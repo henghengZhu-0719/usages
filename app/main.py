@@ -4,9 +4,11 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 
 from app.auth import require_auth
+from app.chat import chat_available, stream_chat
 from app.config import NOTES_DIR
 from app.notes_index import NotesIndex
 from app.watcher import NotesWatcher
@@ -72,6 +74,23 @@ async def api_get_file(file_path: str, _: bool = Depends(require_auth)):
     if not target.is_file() or target.suffix.lower() == ".md":
         raise HTTPException(status_code=404, detail="文件不存在")
     return FileResponse(target)
+
+
+class ChatRequest(BaseModel):
+    messages: list[dict]
+
+
+@app.post("/api/chat")
+async def api_chat(body: ChatRequest, _: bool = Depends(require_auth)):
+    """AI 对话，流式返回纯文本。历史由前端维护，每次带全量 messages。"""
+    if not chat_available():
+        raise HTTPException(status_code=503, detail="未配置 OPENAI_API_KEY，AI 对话不可用")
+    if not body.messages:
+        raise HTTPException(status_code=400, detail="messages 不能为空")
+    # 同步生成器交给 StreamingResponse，Starlette 会放到线程池里迭代
+    return StreamingResponse(
+        stream_chat(body.messages), media_type="text/plain; charset=utf-8"
+    )
 
 
 @app.websocket("/ws/updates")
