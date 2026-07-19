@@ -40,43 +40,9 @@ button {
   align-items: center;
   gap: 10px;
   width: fit-content;
-  padding: 0;
   color: inherit;
   font-size: 17px;
   font-weight: 700;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-}
-
-.brand__arrow {
-  margin-left: 2px;
-  color: #999;
-  font-size: 10px;
-  transition: transform 160ms ease;
-}
-
-.brand:hover .brand__arrow {
-  color: var(--accent);
-}
-
-.folder-menu-item {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 190px;
-}
-
-.folder-menu-item > span {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
-}
-
-.folder-menu-item small {
-  color: #aaa;
 }
 
 .brand__mark {
@@ -98,242 +64,183 @@ button {
 }
 
 .workspace {
-  display: flex;
   height: calc(100vh - 56px);
   height: calc(100dvh - 56px);
   min-height: 0;
 }
 
-.library-panel {
-  display: flex;
-  flex: 0 0 590px;
+/* ---- 文件夹浏览 ---- */
+
+.browser {
   height: 100%;
-  min-width: 0;
-  background: #fff;
-  border-right: 1px solid var(--line);
-}
-
-.folder-panel {
-  display: flex;
-  flex: 0 0 220px;
-  flex-direction: column;
-  min-width: 0;
-  padding: 14px 12px 18px;
-  background: #fafafa;
-  border-right: 1px solid var(--line);
-}
-
-.panel-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px 12px;
-  color: #777;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-}
-
-.panel-heading__count {
-  color: #aaa;
-  font-weight: 500;
-}
-
-.folder-levels {
-  flex: 1;
-  min-height: 0;
+  padding: 20px 28px 48px;
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
-.folder-level + .folder-level {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #e9e9e9;
-}
-
-.folder-level__title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px 7px;
-  color: #555;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.folder-level__title small {
-  color: #aaa;
-  font-size: 10px;
-  font-weight: 400;
-}
-
-.folder-item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 42px;
-  margin-bottom: 3px;
-  padding: 0 10px 0 calc(12px + var(--folder-depth, 0) * 13px);
-  color: #555;
-  text-align: left;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-  border-radius: 10px;
-  transition: background 150ms ease, color 150ms ease;
-}
-
-.folder-item:hover {
-  color: #222;
-  background: #f0f0f0;
-}
-
-.folder-item.is-active {
-  color: var(--accent);
-  font-weight: 600;
-  background: var(--accent-soft);
-}
-
-.folder-item > .anticon {
-  flex: none;
-  margin-right: 9px;
-  font-size: 15px;
-}
-
-.folder-item__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.folder-item__count {
-  flex: none;
-  margin-left: 8px;
-  color: #aaa;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.notes-panel {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  background: #fff;
-}
-
-.note-list {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 0;
-  padding: 12px;
-  overflow: auto;
-  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-color: #ddd transparent;
   scrollbar-width: thin;
 }
 
-.note-list .ant-empty {
-  margin: auto;
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+  margin-bottom: 18px;
 }
 
-.note-card {
+.crumb-seg {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.crumb-sep {
+  color: #ccc;
+  font-size: 10px;
+}
+
+.crumb {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 10px;
+  color: #777;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+
+.crumb:hover {
+  color: #222;
+  background: #efefef;
+}
+
+.crumb.is-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.folder-card {
   display: flex;
-  flex: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px 14px;
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.folder-card:hover {
+  border-color: #ffd7dd;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.folder-card__icon {
+  color: #ffc53d;
+  font-size: 34px;
+}
+
+.folder-card__name {
+  overflow: hidden;
+  width: 100%;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-card__count {
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* ---- 当前目录下的笔记 ---- */
+
+.note-list {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+}
+
+.note-row {
+  display: flex;
   gap: 12px;
   align-items: center;
-  width: 100%;
-  min-height: 82px;
-  padding: 10px;
+  min-height: 52px;
+  padding: 0 18px;
   text-align: left;
   cursor: pointer;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 13px;
-  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  border: 0;
+  border-bottom: 1px solid #f4f4f4;
 }
 
-.note-card:hover {
+.note-row:last-child {
+  border-bottom: 0;
+}
+
+.note-row:hover {
   background: #fafafa;
-  border-color: #f0f0f0;
-  transform: translateY(-1px);
 }
 
-.note-card.is-active {
-  background: #fff7f8;
-  border-color: #ffd7dd;
+.note-row.is-active {
+  background: var(--accent-soft);
 }
 
-.note-card__cover {
-  display: grid;
-  flex: 0 0 58px;
-  height: 62px;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 21px;
-  border-radius: 10px;
-  place-items: center;
+.note-row__icon {
+  flex: none;
+  color: #c9c9c9;
+  font-size: 16px;
 }
 
-.cover-0 { background: linear-gradient(145deg, #ff8a9c, #ff4964); }
-.cover-1 { background: linear-gradient(145deg, #a8d8c7, #4eaa8a); }
-.cover-2 { background: linear-gradient(145deg, #f5c77c, #e69638); }
-.cover-3 { background: linear-gradient(145deg, #a7bff4, #647fd0); }
-.cover-4 { background: linear-gradient(145deg, #d1b2e8, #9c68bf); }
+.note-row.is-active .note-row__icon {
+  color: var(--accent);
+}
 
-.note-card__body {
-  display: flex;
+.note-row__title {
   flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.note-card__body strong {
   overflow: hidden;
-  color: #262626;
+  min-width: 0;
+  color: #333;
   font-size: 14px;
-  line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.note-card__meta,
-.note-card__body small {
-  display: flex;
-  gap: 8px;
-  min-width: 0;
-  margin-top: 8px;
-  overflow: hidden;
-  color: #aaa;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.note-card__meta span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.note-card__snippet {
-  display: -webkit-box;
-  margin-top: 4px;
-  overflow: hidden;
-  color: #888;
+.note-row__date {
+  flex: none;
+  color: #b0b0b0;
   font-size: 12px;
-  line-height: 1.4;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
+
+.browser-empty {
+  margin-top: 64px;
+}
+
+/* ---- 阅读视图（覆盖整个工作区） ---- */
 
 .note-detail {
-  flex: 1;
-  min-width: 0;
+  display: none;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -341,14 +248,23 @@ button {
   background: #fff;
 }
 
+.app-shell--reading .browser {
+  display: none;
+}
+
+.app-shell--reading .note-detail {
+  display: block;
+}
+
 .detail-toolbar {
   position: sticky;
   z-index: 1;
   top: 0;
   display: flex;
+  gap: 14px;
   align-items: center;
-  height: 48px;
-  padding: 0 30px;
+  height: 50px;
+  padding: 0 24px;
   color: #aaa;
   font-size: 12px;
   background: rgba(255, 255, 255, 0.92);
@@ -357,61 +273,45 @@ button {
 }
 
 .back-button {
-  display: none;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 40px;
+  padding: 0;
   color: #555;
   cursor: pointer;
   background: transparent;
   border: 0;
 }
 
-.detail-state,
-.detail-placeholder {
+.back-button:hover {
+  color: var(--accent);
+}
+
+.detail-toolbar > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-state {
   display: grid;
   height: 100%;
-  color: #aaa;
-  text-align: center;
   place-content: center;
-}
-
-.detail-placeholder__icon {
-  display: grid;
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 14px;
-  color: #bbb;
-  font-size: 28px;
-  background: #f5f5f5;
-  border-radius: 22px;
-  place-items: center;
-}
-
-.detail-placeholder h2 {
-  margin: 0 0 6px;
-  color: #555;
-  font-size: 18px;
-}
-
-.detail-placeholder p {
-  margin: 0;
-  font-size: 13px;
 }
 
 .note-detail .markdown-body {
   width: 100%;
   min-width: 0;
   max-width: 840px;
+  margin: 0 auto;
   padding: 42px 48px 80px;
 }
 
-@media (max-width: 1100px) {
-  .library-panel { flex-basis: 520px; }
-  .folder-panel { flex-basis: 190px; }
-}
+/* ---- 移动端 ---- */
 
 @media (max-width: 900px) {
   .app-header {
-    grid-template-columns: 1fr auto;
-    height: 56px;
     padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
   }
 
@@ -429,151 +329,28 @@ button {
   }
 
   .header-count {
-    color: #999;
     font-size: 12px;
   }
 
-  .workspace {
-    height: calc(100vh - 56px);
-    height: calc(100dvh - 56px);
+  .browser {
+    padding: 14px max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   }
 
-  .library-panel {
-    flex: 1 1 100%;
-    flex-direction: column;
-    width: 100%;
-    border-right: 0;
+  .folder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
   }
 
-  .folder-panel {
-    flex: 0 0 auto;
-    width: 100%;
-    padding: 11px 14px 10px;
-    background: #fff;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
+  .folder-card {
+    padding: 14px 13px 12px;
   }
 
-  .panel-heading {
-    display: none;
+  .folder-card__icon {
+    font-size: 28px;
   }
 
-  .folder-levels {
-    flex: 0 1 auto;
-    max-height: 156px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: none;
-  }
-
-  .folder-levels::-webkit-scrollbar {
-    display: none;
-  }
-
-  .folder-level + .folder-level {
-    margin-top: 9px;
-    padding-top: 9px;
-  }
-
-  .folder-level__title {
-    justify-content: flex-start;
-    gap: 6px;
-    padding: 0 2px 6px;
-  }
-
-  .folder-level__title small::before {
-    content: '· ';
-  }
-
-  .folder-list {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-  }
-
-  .folder-list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .folder-item {
-    flex: 0 0 auto;
-    width: auto;
-    height: 36px;
-    margin: 0;
-    padding: 0 13px !important;
-    background: #fff;
-    border: 1px solid #ededed;
-    border-radius: 18px;
-  }
-
-  .folder-item:hover {
-    background: #f7f7f7;
-  }
-
-  .folder-item.is-active {
-    color: #fff;
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
-  .folder-item > .anticon {
-    margin-right: 6px;
-    font-size: 13px;
-  }
-
-  .folder-item__name {
-    flex: none;
-    max-width: 150px;
-  }
-
-  .folder-item__count {
-    margin-left: 6px;
-  }
-
-  .folder-item.is-active .folder-item__count {
-    color: rgba(255, 255, 255, 0.75);
-  }
-
-  .notes-panel {
-    min-height: 0;
-  }
-
-  .note-list {
-    gap: 0;
-    padding: 0 12px max(24px, env(safe-area-inset-bottom));
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .note-card {
-    min-height: 86px;
-    padding: 11px 4px;
-    border: 0;
-    border-bottom: 1px solid #f2f2f2;
-    border-radius: 0;
-  }
-
-  .note-card:hover {
-    background: transparent;
-    border-color: #f2f2f2;
-    transform: none;
-  }
-
-  .note-card:active {
-    background: #fafafa;
-  }
-
-  .note-card__cover {
-    flex-basis: 56px;
-    height: 58px;
-    border-radius: 10px;
-  }
-
-  .note-detail { display: none; }
-
-  .app-shell--reading .app-header,
-  .app-shell--reading .library-panel {
+  .app-shell--reading .app-header {
     display: none;
   }
 
@@ -582,26 +359,18 @@ button {
     height: 100dvh;
   }
 
-  .app-shell--reading .note-detail {
-    display: block;
-    width: 100%;
-  }
-
   .detail-toolbar {
     height: 54px;
     padding: 0 16px;
   }
 
   .back-button {
-    display: inline-flex;
-    gap: 7px;
-    align-items: center;
     min-height: 44px;
-    margin-right: auto;
-    padding: 0;
   }
 
-  .detail-toolbar > span { display: none; }
+  .detail-toolbar > span {
+    display: none;
+  }
 
   .note-detail .markdown-body {
     padding: 28px max(20px, env(safe-area-inset-right)) max(64px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
@@ -614,20 +383,8 @@ button {
 }
 
 @media (max-width: 480px) {
-  .folder-item__name {
-    max-width: 112px;
-  }
-
-  .note-card__body strong {
-    display: -webkit-box;
-    overflow: hidden;
-    white-space: normal;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .note-card__meta span:last-child {
-    max-width: 145px;
+  .folder-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .note-detail .markdown-body {
